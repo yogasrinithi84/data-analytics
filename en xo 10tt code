@@ -1,0 +1,32 @@
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+df = pd.DataFrame({
+'A': [10, 12, 11, 13, 12],
+'B': [20, 22, 19, 21, 23],
+'C': [30, 29, 31, 32, 30],
+'D': [40, 42, 39, 41, 43]
+})
+print("Dataset:\n", df)
+fvalue, pvalue = stats.f_oneway(df['A'], df['B'], df['C'], df['D'])
+print("\nANOVA using SciPy")
+print("F-value =", fvalue)
+print("p-value =", pvalue)
+df_melt = pd.melt(df.reset_index(),
+id_vars=['index'],
+value_vars=['A', 'B', 'C', 'D'])
+df_melt.columns = ['index', 'treatments', 'value']
+
+model = ols('value ~ C(treatments)', data=df_melt).fit()
+anova_table = sm.stats.anova_lm(model, typ=2)
+print("\nANOVA Table (Statsmodels):")
+print(anova_table)
+alpha = 0.05
+if pvalue < alpha:
+print("\nDecision: Reject Null Hypothesis")
+print("Conclusion: At least one group mean is significantly different")
+else:
+print("\nDecision: Fail to Reject Null Hypothesis")
+print("Conclusion: No significant difference among group means")
