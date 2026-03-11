@@ -1,0 +1,49 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LinearRegression
+import warnings
+warnings.filterwarnings('ignore')
+data = {
+'area': [800, 900, 1000, 1200, 1500, 1800, 2000, 2300, 2600, 3000,
+3200, 3500, 3700, 4000, 4200, 4500, 4800, 5000, 5300, 5600],
+'price': [200000, 220000, 250000, 300000, 350000, 380000, 420000, 460000, 500000,
+550000,
+580000, 620000, 650000, 700000, 730000, 780000, 820000, 860000, 900000,
+950000]
+}
+housing = pd.DataFrame(data)
+print("First 5 rows of dataset:\n")
+print(housing.head())
+
+print("\nTotal observations:", len(housing.index))
+df = housing[['area', 'price']]
+scaler = MinMaxScaler()
+df_scaled = scaler.fit_transform(df)
+df = pd.DataFrame(df_scaled, columns=['area', 'price'])
+sns.regplot(x="area", y="price", data=df, fit_reg=False)
+plt.title("Area vs Price (Scaled)")
+plt.show()
+df_train, df_test = train_test_split(df, train_size=0.7, test_size=0.3, random_state=10)
+print("\nTraining size:", len(df_train))
+print("Testing size:", len(df_test))
+X_train = df_train['area'].values.reshape(-1, 1)
+y_train = df_train['price']
+X_test = df_test['area'].values.reshape(-1, 1)
+y_test = df_test['price']
+degree = 2
+model = make_pipeline(PolynomialFeatures(degree), LinearRegression())
+model.fit(X_train, y_train)
+train_score = model.score(X_train, y_train)
+test_score = model.score(X_test, y_test)
+print("\nModel Performance")
+print("Training R^2 Score:", train_score)
+print("Testing R^2 Score:", test_score)
+kf = KFold(n_splits=5, shuffle=True, random_state=10)
+cv_scores = cross_val_score(model, X_train, y_train, cv=kf, scoring='r2')
+print("\nCross Validation R^2 Scores:", cv_scores)
+print("Average CV Score:", np.mean(cv_scores))
